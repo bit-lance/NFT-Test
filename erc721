@@ -1,0 +1,96 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.15;
+
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
+
+contract Contract is ERC721, ERC721Enumerable, Ownable {
+    using Strings for uint256;
+    using Counters for Counters.Counter;
+
+    uint256 public constant MAX_SUPPLY = 5;
+    string private constant URI_EXTENSION = ".json";
+
+    uint256 public mintValue = 0 ether;
+    string public baseUri = "ipfs://bafybeidibuamabizohpx4ecd4cj26gdcitakwx6zygtnj5nx4w74diwqwy/";
+    string private contractUri = "ipfs://bafybeihkcxamtixzhdrqltrsxhp6pugywzhbzbj2b2dijtr54l6aug7vxm/contractURI.json";
+    bool public saleState = true;
+    Counters.Counter private _tokenIdCounter;
+
+    constructor() ERC721("Stickmans", "S") {}
+    receive() external payable {}
+    fallback() external payable {}
+
+    function mint() external payable {
+        require(msg.sender == tx.origin, "Not allowed");
+        require(saleState, "Sale is closed");
+        require(totalSupply() < MAX_SUPPLY, "Can't mint more");
+        require(msg.value >= mintValue, "Not enough value");
+
+        _tokenIdCounter.increment();
+        uint256 tokenId = _tokenIdCounter.current();
+        _safeMint(msg.sender, tokenId);
+    }
+
+    function contractURI() public view returns (string memory) {
+        return contractUri;
+    }
+
+    /// Only owner
+
+    function withdraw() external onlyOwner {
+        require(address(this).balance > 0, "No balance");
+        payable(owner()).transfer(address(this).balance);
+    }
+
+    function setSaleState(bool _state) external onlyOwner {
+        require(saleState != _state, "Sale state won't change");
+        saleState = _state;
+    }
+
+    function setMintValue(uint _value) external onlyOwner {
+        require(mintValue != _value, "Mint value won't change");
+        mintValue = _value;
+    }
+
+    function setURI(string memory _baseUri) external onlyOwner {
+        require(keccak256(bytes(baseUri)) != keccak256(bytes(_baseUri)), "URI won't change");
+        baseUri = _baseUri;
+    }
+
+    function setContractURI(string memory _contractUri) external onlyOwner {
+        require(keccak256(bytes(contractUri)) != keccak256(bytes(_contractUri)), "URI won't change");
+        contractUri = _contractUri;
+    }
+
+    /// Overrides
+
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
+        return string.concat(_baseURI(), tokenId.toString(), URI_EXTENSION);
+    }
+
+    function _baseURI() internal view override returns (string memory) {
+        return baseUri;
+    }
+
+    /// The following functions are overrides required by Solidity.
+
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId)
+        internal
+        override(ERC721, ERC721Enumerable)
+    {
+        super._beforeTokenTransfer(from, to, tokenId);
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721, ERC721Enumerable)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+}
