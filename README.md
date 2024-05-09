@@ -16,3 +16,7 @@ The super update will come up soon. Then anyone can fork and mint NFT on a testn
 
 Update 6
 
+Update 7
+
+
+
