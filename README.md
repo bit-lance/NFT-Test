@@ -16,3 +16,4 @@ AI MODEL 4 x 3 x7
 meFUN meFUN meFUN meFUN
 AI MODEL 4 x 3 x9
 AI MODEL 4 x 7 x11
+AI MODEL 4 x 7 x13
